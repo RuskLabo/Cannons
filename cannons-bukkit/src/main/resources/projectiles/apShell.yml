@@ -1,0 +1,100 @@
+general:
+  projectileName: "魔導徹甲弾"
+  description: "魔力を帯びた結晶弾。装甲を貫き黒曜石をも砕く。階段で稀に跳ね返る。"
+  itemName: diamond
+  loadingItem: 'minecraft:diamond'
+
+cannonball:
+  entityType: SNOWBALL
+  isOnFire: false
+  #徹甲弾=高速
+  velocity: 4.5
+  #4ブロック貫通
+  penetration: 4
+  doesPenetrationDamage: true
+  timefuse: 0
+  automaticFiringDelay: 1.5
+  automaticFiringMagazineSize: 1
+  numberOfBullets: 1
+  spreadMultiplier: 0.6
+  sentryIgnoredBlocks: 2
+  #25%で跳弾(階段でのみ判定)
+  stairRicochetChance: 0.25
+  stairRicochetEnergyRetention: 0.7
+  properties:
+    #obsidian/water/lavaも貫通
+    - superbreaker
+
+smokeTrail:
+  enabled: true
+  distance: 4
+  material: 'minecraft:purple_concrete'
+  duration: 3.0
+  particles:
+    enabled: true
+    type: ENCHANT
+    count: 6
+    x_offset: 0.1
+    y_offset: 0.1
+    z_offset: 0.1
+    speed: 0
+
+explosion:
+  #徹甲弾=爆発は控えめ、運動エネルギー依存
+  explosionPower: 2.0
+  explosionPowerDependsOnVelocity: true
+  doesExplosionDamage: true
+  doesUnderwaterExplosion: true
+  directHitDamage: 180
+  playerDamageRange: 3
+  playerDamage: 20
+  potionRange: 3
+  potionDuration: 3
+  potionAmplifier: 1
+  potionEffects:
+   - wither
+  impactIndicator: true
+
+clusterExplosion:
+  enabled: false
+  explosionInBlocks: false
+  amount: 0
+  minDelay: 0.0
+  maxDelay: 0.0
+  radius: 0.0
+  power: 0.0
+
+spawnOnExplosion:
+  enabled: false
+  blockRadius: 2.0
+  entityRadius: 2.0
+  velocity: 0.5
+  block:
+  entity:
+  projectiles:
+
+spawnFireworks:
+  enabled: true
+  flicker: false
+  trail: true
+  type: STAR
+  colors:
+    #紫(魔導)
+    - '8000FF'
+    #青白
+    - 'B090FF'
+  fadeColors:
+    #白
+    - 'FFFFFF'
+
+messages:
+  hasImpactMessage: true
+
+sounds:
+  loading: 'BLOCK_AMETHYST_BLOCK_CHIME:3:1.3'
+  impact: 'BLOCK_ANVIL_LAND:8:0.6'
+  impactProtected: 'BLOCK_ANVIL_LAND:8:0.6'
+  impactWater: 'ENTITY_GENERIC_SPLASH:10:0.4'
+
+loadPermission:
+  - cannons.projectile.default

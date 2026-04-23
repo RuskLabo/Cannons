@@ -1,0 +1,100 @@
+general:
+  #砲弾表示名
+  projectileName: "炸裂弾"
+  description: "着弾と同時に炸裂する魔導火薬弾。装甲には弱いが面制圧に最適。"
+  itemName: TNT
+  loadingItem: 'minecraft:tnt'
+
+cannonball:
+  entityType: SNOWBALL
+  isOnFire: false
+  velocity: 3.0
+  #貫通なし、最初に当たった所で炸裂
+  penetration: 0
+  doesPenetrationDamage: false
+  timefuse: 0
+  automaticFiringDelay: 1.0
+  automaticFiringMagazineSize: 1
+  numberOfBullets: 1
+  spreadMultiplier: 1.2
+  sentryIgnoredBlocks: 0
+  #炸裂弾は階段で跳ねない(=破裂)
+  stairRicochetChance: 0.0
+  properties:
+    #着弾地点を燃やす
+    - incendiary
+
+smokeTrail:
+  enabled: true
+  distance: 6
+  material: 'minecraft:white_smoke'
+  duration: 3.5
+  particles:
+    enabled: true
+    type: FLAME
+    count: 4
+    x_offset: 0.05
+    y_offset: 0.05
+    z_offset: 0.05
+    speed: 0
+
+explosion:
+  #炸裂弾=高威力、破壊範囲広め
+  explosionPower: 4.5
+  explosionPowerDependsOnVelocity: false
+  doesExplosionDamage: true
+  doesUnderwaterExplosion: false
+  directHitDamage: 80
+  playerDamageRange: 6
+  playerDamage: 10
+  potionRange: 4
+  potionDuration: 4
+  potionAmplifier: 0
+  potionEffects:
+   - harm
+  impactIndicator: true
+
+#二次炸裂で面制圧
+clusterExplosion:
+  enabled: true
+  explosionInBlocks: false
+  amount: 4
+  minDelay: 0.2
+  maxDelay: 1.5
+  radius: 4.0
+  power: 2.0
+
+spawnOnExplosion:
+  enabled: false
+  blockRadius: 2.0
+  entityRadius: 2.0
+  velocity: 0.5
+  block:
+  entity:
+  projectiles:
+
+spawnFireworks:
+  enabled: true
+  flicker: true
+  trail: false
+  type: BALL_LARGE
+  colors:
+    #オレンジ
+    - 'FF7F00'
+    #赤
+    - 'FF0000'
+  fadeColors:
+    #黄
+    - 'FFD800'
+
+messages:
+  hasImpactMessage: true
+
+sounds:
+  loading: 'BLOCK_GRASS_PLACE:3:0.7'
+  impact: 'ENTITY_GENERIC_EXPLODE:12:0.7'
+  impactProtected: 'ENTITY_GENERIC_EXPLODE:10:0.5'
+  impactWater: 'ENTITY_GENERIC_SPLASH:10:0.3'
+
+loadPermission:
+  - cannons.projectile.default

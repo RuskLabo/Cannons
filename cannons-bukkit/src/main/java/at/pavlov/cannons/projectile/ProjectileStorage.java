@@ -306,17 +306,8 @@ public class ProjectileStorage
 	 */
 	private void copyDefaultProjectiles()
 	{
-		copyFile("canistershot");
-		copyFile("tnt");
-		copyFile("cobblestone");
-		copyFile("diamond");
-
-		copyFile("enderpearl");
-
-		copyFile("firework1");
-		copyFile("firework2");
-		copyFile("firework3");
-		copyFile("firework4");
+		copyFile("heShell");
+		copyFile("apShell");
 	}
 
 	/**
