@@ -15,10 +15,13 @@ import at.pavlov.cannons.utils.SoundUtils;
 import com.cryptomorin.xseries.XPotion;
 import com.cryptomorin.xseries.particles.XParticle;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Effect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.World;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -165,6 +168,12 @@ public class FireTaskWrapper implements BaseFireTask {
 
         //simple particle effects for close distance
         loc.getWorld().spawnParticle(XParticle.EXPLOSION.get(), loc, 1);
+
+        // Magic-circle flourish for the default "fantasy" cannon designs.
+        String designId = cannon.getCannonDesign().getDesignID();
+        if ("classic".equals(designId) || "ironCannon".equals(designId)) {
+            renderMagicCircle(loc, cannon.getCannonDirection());
+        }
         //fake blocks effects for far distance
         if (!config.isImitatedFiringEffectEnabled()) {
             return;
@@ -183,6 +192,58 @@ public class FireTaskWrapper implements BaseFireTask {
             }
         }
         imitateSmoke(players);
+    }
+
+    /**
+     * Renders a fantasy-style magic circle on the plane perpendicular to the
+     * cannon barrel at the moment of firing. Dual concentric rings of
+     * enchant/end_rod particles plus a dust flash at the center; single-frame
+     * effect that fades on its own.
+     */
+    private void renderMagicCircle(Location center, BlockFace facing) {
+        World world = center.getWorld();
+        if (world == null) return;
+
+        Vector normal = new Vector(facing.getModX(), facing.getModY(), facing.getModZ());
+        if (normal.lengthSquared() < 1e-6) {
+            return;
+        }
+        normal.normalize();
+
+        // Build two orthonormal basis vectors on the plane perpendicular to `normal`.
+        Vector tmp = Math.abs(normal.getY()) > 0.9 ? new Vector(1, 0, 0) : new Vector(0, 1, 0);
+        Vector u = normal.clone().crossProduct(tmp).normalize();
+        Vector v = normal.clone().crossProduct(u).normalize();
+
+        final int outerPoints = 36;
+        final int innerPoints = 20;
+        final double outerRadius = 1.4;
+        final double innerRadius = 0.8;
+
+        Particle.DustOptions rune = new Particle.DustOptions(Color.fromRGB(120, 80, 255), 1.2f);
+
+        for (int i = 0; i < outerPoints; i++) {
+            double a = (2 * Math.PI * i) / outerPoints;
+            double c = Math.cos(a) * outerRadius;
+            double s = Math.sin(a) * outerRadius;
+            Location p = center.clone()
+                    .add(u.clone().multiply(c))
+                    .add(v.clone().multiply(s));
+            world.spawnParticle(Particle.DUST, p, 1, 0, 0, 0, 0, rune);
+            world.spawnParticle(Particle.ENCHANT, p, 2, 0.02, 0.02, 0.02, 0.4);
+        }
+        for (int i = 0; i < innerPoints; i++) {
+            double a = (2 * Math.PI * i) / innerPoints + Math.PI / innerPoints;
+            double c = Math.cos(a) * innerRadius;
+            double s = Math.sin(a) * innerRadius;
+            Location p = center.clone()
+                    .add(u.clone().multiply(c))
+                    .add(v.clone().multiply(s));
+            world.spawnParticle(Particle.END_ROD, p, 1, 0, 0, 0, 0);
+        }
+
+        world.spawnParticle(Particle.FLASH, center, 1, 0, 0, 0, 0);
+        world.spawnParticle(Particle.SOUL_FIRE_FLAME, center, 8, 0.15, 0.15, 0.15, 0.02);
     }
 
     /**
