@@ -1261,13 +1261,22 @@ public class Aiming {
 
             // Folia: bail out if the trajectory walks into a chunk not owned by
             // the current region thread — reading the block would crash with
-            // "Cannot read world asynchronously".
+            // "Cannot read world asynchronously". Wrap the block read in a
+            // try so any residual cross-region access degrades gracefully
+            // instead of throwing up to the global scheduler.
             if (!isOwnedByCurrentRegion(loc)) {
                 return null;
             }
 
-            Block block = loc.getBlock();
-            if (!block.isEmpty()) {
+            boolean blocked;
+            try {
+                blocked = !loc.getBlock().isEmpty();
+            } catch (IllegalStateException ownershipFail) {
+                // Defensive: Folia threw "Cannot read world asynchronously"
+                // anyway (chunk unloaded mid-call, etc.). Stop the trace.
+                return null;
+            }
+            if (blocked) {
                 predictor.revertProjectileLocation(false);
                 return CannonsUtil.findSurface(loc, predictor.getVel());
             }
