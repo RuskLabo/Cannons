@@ -220,6 +220,8 @@ public class ProjectileStorage
 			plugin.logDebug("Low velocity of " + projectile.getVelocity() + " for projectile detected");
 		projectile.setPenetration(projectileConfig.getDouble("cannonball.penetration", 0.0));
 		projectile.setPenetrationDamage(projectileConfig.getBoolean("cannonball.doesPenetrationDamage", true));
+		projectile.setStairRicochetChance(projectileConfig.getDouble("cannonball.stairRicochetChance", 0.0));
+		projectile.setStairRicochetEnergyRetention(projectileConfig.getDouble("cannonball.stairRicochetEnergyRetention", 0.6));
 		projectile.setTimefuse(projectileConfig.getDouble("cannonball.timefuse", 0.0));
 		projectile.setAutomaticFiringDelay(projectileConfig.getDouble("cannonball.automaticFiringDelay", 1.0));
 		projectile.setAutomaticFiringMagazineSize(projectileConfig.getInt("cannonball.automaticFiringMagazineSize", 1));

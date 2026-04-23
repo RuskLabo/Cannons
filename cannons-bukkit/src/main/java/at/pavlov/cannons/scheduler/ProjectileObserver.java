@@ -9,12 +9,14 @@ import at.pavlov.cannons.dao.AsyncTaskManager;
 import at.pavlov.cannons.projectile.FlyingProjectile;
 import at.pavlov.cannons.projectile.Projectile;
 import at.pavlov.cannons.projectile.ProjectileManager;
+import at.pavlov.cannons.Enum.ProjectileCause;
 import at.pavlov.internal.projectile.ProjectileProperties;
 import at.pavlov.cannons.utils.CannonsUtil;
 import at.pavlov.cannons.utils.SoundUtils;
 import io.papermc.lib.PaperLib;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -217,6 +219,12 @@ public class ProjectileObserver {
         {
             cannonball.revertUpdate();
             cannonball.teleportToPrediction(projectile_entity);
+
+            if (tryStairRicochet(cannonball, block)) {
+                projectile_entity.remove();
+                return true;
+            }
+
             CreateExplosion.getInstance().detonate(cannonball, projectile_entity);
             projectile_entity.remove();
             return true;
@@ -224,6 +232,67 @@ public class ProjectileObserver {
         //todo proximity fuse
         cannonball.update();
         return false;
+    }
+
+
+    /**
+     * Attempt to ricochet the cannonball off a stair block. Returns true if
+     * ricocheted (caller should skip detonation), false otherwise.
+     *
+     * Only stair blocks trigger this path. Chance and energy retention are
+     * per-projectile config values (stairRicochetChance, stairRicochetEnergyRetention).
+     * SUPERBREAKER projectiles ignore the check — they punch through regardless.
+     */
+    private boolean tryStairRicochet(FlyingProjectile cannonball, Block block) {
+        Projectile projectile = cannonball.getProjectile();
+        double chance = projectile.getStairRicochetChance();
+        if (chance <= 0.0)
+            return false;
+        if (!Tag.STAIRS.isTagged(block.getType()))
+            return false;
+        if (projectile.hasProperty(ProjectileProperties.SUPERBREAKER))
+            return false;
+        if (random.nextDouble() >= chance)
+            return false;
+
+        // Simple reflection: energy-reduced velocity with Y flipped, plus small
+        // random perturbation so successive ricochets don't line up on a grid.
+        double retention = projectile.getStairRicochetEnergyRetention();
+        Vector v = cannonball.getVelocity().clone().multiply(retention);
+        v.setY(-v.getY());
+        double mag = v.length();
+        v.add(new Vector(
+                (random.nextDouble() - 0.5) * mag * 0.1,
+                (random.nextDouble() - 0.5) * mag * 0.05,
+                (random.nextDouble() - 0.5) * mag * 0.1));
+
+        // Skip ricochet if the resulting velocity would be too sluggish to
+        // produce a meaningful bounce — let it detonate instead.
+        if (v.length() < 0.3)
+            return false;
+
+        Location impactLoc = cannonball.getImpactLocation() == null
+                ? cannonball.getExpectedLocation()
+                : cannonball.getImpactLocation().clone();
+        // Nudge the spawn point slightly back along the incoming velocity so
+        // the fresh projectile doesn't immediately re-collide with the stair.
+        impactLoc.subtract(cannonball.getVelocity().clone().normalize().multiply(0.3));
+
+        final Vector ricochetVel = v;
+        AsyncTaskManager.get().scheduler.runTaskLater(impactLoc, () -> {
+            ProjectileManager.getInstance().spawnProjectile(
+                    projectile,
+                    cannonball.getShooterUID(),
+                    cannonball.getSource(),
+                    cannonball.getPlayerlocation(),
+                    impactLoc.clone(),
+                    ricochetVel,
+                    cannonball.getCannonUID(),
+                    ProjectileCause.DeflectedProjectile);
+        }, 1L);
+
+        plugin.logDebug("Stair ricochet: vel=" + ricochetVel + " at " + impactLoc);
+        return true;
     }
 
 

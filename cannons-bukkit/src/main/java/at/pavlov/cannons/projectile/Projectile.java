@@ -48,6 +48,8 @@ public class Projectile implements Cloneable {
     private boolean projectileOnFire;
     private double velocity;
     private double penetration;
+    @Getter @Setter private double stairRicochetChance;
+    @Getter @Setter private double stairRicochetEnergyRetention = 0.6;
     private double timefuse;
     private double automaticFiringDelay;
     private int automaticFiringMagazineSize;
