@@ -1259,6 +1259,13 @@ public class Aiming {
             //see if we hit something
             Location loc = predictor.getLocation();
 
+            // Folia: bail out if the trajectory walks into a chunk not owned by
+            // the current region thread — reading the block would crash with
+            // "Cannot read world asynchronously".
+            if (!isOwnedByCurrentRegion(loc)) {
+                return null;
+            }
+
             Block block = loc.getBlock();
             if (!block.isEmpty()) {
                 predictor.revertProjectileLocation(false);
@@ -1301,21 +1308,53 @@ public class Aiming {
                 continue;
             }
 
-            Location impact = impactPredictor(cannon);
+            // Offline/one-shot cleanup is safe on any thread; do it here before
+            // dispatching the per-region predictor job.
             Iterator<Map.Entry<UUID, Boolean>> entry = nameList.entrySet().iterator();
             while (entry.hasNext()) {
                 Map.Entry<UUID, Boolean> nextName = entry.next();
                 Player player = Bukkit.getPlayer(nextName.getKey());
-                //show impact to the player
-                if (player != null && impact != null && FakeBlockHandler.getInstance().belowMaxLimit(player, impact)) {
-                    FakeBlockHandler.getInstance().imitatedSphere(player, impact, 1, config.getImitatedPredictorMaterial(), FakeBlockType.IMPACT_PREDICTOR, config.getImitatedPredictorTime());
-                }
-                //remove entry if there removeEntry enabled, or player is offline
                 if (nextName.getValue() || player == null) {
                     plugin.logDebug("remove " + nextName.getKey() + " from observerlist");
                     entry.remove();
                 }
             }
+
+            // Folia: run the predictor on the cannon's region thread so block
+            // reads in impactPredictor() are valid. Snapshot the observer list
+            // because it may be mutated elsewhere.
+            final HashMap<UUID, Boolean> observers = new HashMap<>(nameList);
+            Location muzzle = cannon.getMuzzle();
+            AsyncTaskManager.get().scheduler.runTask(muzzle, () -> {
+                Location impact = impactPredictor(cannon);
+                if (impact == null) return;
+                for (UUID observerId : observers.keySet()) {
+                    Player player = Bukkit.getPlayer(observerId);
+                    if (player != null && FakeBlockHandler.getInstance().belowMaxLimit(player, impact)) {
+                        FakeBlockHandler.getInstance().imitatedSphere(
+                                player, impact, 1,
+                                config.getImitatedPredictorMaterial(),
+                                FakeBlockType.IMPACT_PREDICTOR,
+                                config.getImitatedPredictorTime());
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * Folia-safe check: returns true if the current thread owns the region
+     * that contains {@code loc}. Falls back to true on non-Folia runtimes
+     * (reflective lookup returns false only when the method is missing on the
+     * Paper version in use).
+     */
+    private static boolean isOwnedByCurrentRegion(Location loc) {
+        try {
+            return (boolean) Bukkit.class
+                    .getMethod("isOwnedByCurrentRegion", org.bukkit.World.class, int.class, int.class)
+                    .invoke(null, loc.getWorld(), loc.getBlockX() >> 4, loc.getBlockZ() >> 4);
+        } catch (ReflectiveOperationException ignored) {
+            return true;
         }
     }
 
