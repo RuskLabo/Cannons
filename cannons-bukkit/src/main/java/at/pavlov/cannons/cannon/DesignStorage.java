@@ -629,9 +629,7 @@ public class DesignStorage
 	private void copyDefaultDesigns()
 	{
 		copyFile("classic");
-        copyFile("mortar");
-        copyFile("ironCannon");
-		copyFile("sentry");
+		copyFile("ironCannon");
 	}
 
     /**

@@ -27,7 +27,7 @@ cannonball:
 smokeTrail:
   enabled: true
   distance: 6
-  material: 'minecraft:white_smoke'
+  material: 'minecraft:snow_block'
   duration: 3.5
   particles:
     enabled: true
