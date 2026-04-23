@@ -155,13 +155,16 @@ public class FakeBlockHandler {
             }
         }
 
+        // Folia: join() would block the region thread that supplyAsync might
+        // be scheduling onto (deadlock). Dispatch sendBlockChange as a callback
+        // instead so the region thread returns promptly.
         for (var entry : blockList.entrySet()) {
-            BlockData block = entry.getValue().join();
-            if (block == null) {
-                continue;
-            }
-
-            player.sendBlockChange(entry.getKey(), block);
+            entry.getValue().thenAccept(block -> {
+                if (block == null) {
+                    return;
+                }
+                player.sendBlockChange(entry.getKey(), block);
+            });
         }
     }
 
@@ -193,13 +196,16 @@ public class FakeBlockHandler {
             }
         }
 
+        // Folia: join() would block the region thread that supplyAsync might
+        // be scheduling onto (deadlock). Dispatch sendBlockChange as a callback
+        // instead so the region thread returns promptly.
         for (var entry : blockList.entrySet()) {
-            BlockData block = entry.getValue().join();
-            if (block == null) {
-                continue;
-            }
-
-            player.sendBlockChange(entry.getKey(), block);
+            entry.getValue().thenAccept(block -> {
+                if (block == null) {
+                    return;
+                }
+                player.sendBlockChange(entry.getKey(), block);
+            });
         }
     }
 
