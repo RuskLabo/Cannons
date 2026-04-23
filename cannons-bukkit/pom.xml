@@ -56,8 +56,18 @@
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
         <repository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/APDevTeam/Movecraft</url>
+            <id>voidtracer</id>
+            <url>https://maven.pkg.github.com/RuskLabo/VoidTracer</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>movecraft-combat</id>
+            <url>https://maven.pkg.github.com/APDevTeam/Movecraft-Combat</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -133,7 +143,7 @@
         <dependency>
             <groupId>net.countercraft</groupId>
             <artifactId>movecraft</artifactId>
-            <version>8.0.0_beta-5</version>
+            <version>8.0.0_beta-6-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
